@@ -321,9 +321,8 @@ internal fun registerAuthoringOperations(registry: WorkspaceOperationRegistry, w
     fun registerCommandOperations(name: String, description: String, variants: Map<String, String>, mutating: Boolean) {
         variants.forEach { (mode, commandId) ->
             val command = commands.get(commandId)
-            val properties = JsonObject(command.schema.properties.filterKeys { it != "task_id" && !(commandId == "asset_import_png" && it == "png_base64") })
-            val required = command.schema.required.filter { it != "task_id" } +
-                if (commandId == "asset_import_png") listOf("png_path") else emptyList()
+            val properties = JsonObject(command.schema.properties.filterKeys { it != "task_id" })
+            val required = command.schema.required.filter { it != "task_id" }
             val id = when (commandId) {
                 "asset_split_artwork" -> "source_split_polygon"
                 "asset_split_components" -> "source_split_components"
@@ -356,7 +355,7 @@ internal fun registerAuthoringOperations(registry: WorkspaceOperationRegistry, w
         mapOf("compare" to "view_compare_history", "motion" to "view_sample_motion", "poses" to "view_render_poses", "model" to "view_render_model", "layer" to "view_render_layer", "context" to "view_render_context", "coverage" to "view_check_coverage"), false)
     registerCommandOperations("parameter", "Create, update, or delete a parameter definition. kind=blend_shape creates a blend-shape parameter (default 0..1, neutral key at 0). A parameter alone produces no motion: form/deform author its object bindings and keys. Deleting collapses keyed axes at the prior default and removes blend bindings.",
         mapOf("create" to "parameter_create", "update" to "parameter_update", "delete" to "parameter_delete"), true)
-    registerCommandOperations("asset", "Use local artwork from your host image generator. split partitions a source layer into polygon-inside/remainder (canvas pixels), before motion authoring; hidden artwork is not generated. For additions prepare a reference, import/register PNG, preview, add. Reference/view handles preserve placement. Generated art is not proof of model motion.",
+    registerCommandOperations("asset", "Use PNG artwork from an absolute local path or inline Base64 bytes from a remote image generator. split partitions a source layer into polygon-inside/remainder (canvas pixels), before motion authoring; hidden artwork is not generated. For additions prepare a reference, import/register PNG, preview, add. Reference/view handles preserve placement. Generated art is not proof of model motion.",
         mapOf("split" to "asset_split_artwork", "components" to "asset_split_components", "depth" to "asset_split_depth", "reference" to "asset_prepare_reference", "import" to "asset_import_png", "register" to "asset_register", "preview" to "asset_preview_composite", "add" to "layer_add_from_asset", "place" to "layer_set_placement", "finalize" to "layer_finalize_placement", "inspect" to "asset_inspect", "reprocess" to "asset_reprocess", "remove" to "layer_soft_delete", "restore" to "layer_restore"), true)
     registerCommandOperations("swing", "Generate regenerating sway on Warps or meshes (wrapped in a tight Warp): kind=lateral swings the tip left/right, kind=vertical up/down (or motions=[...] for both), each on -1/0/1 keys per segment parameter, with a matching pendulum unless physics_enabled=false. parallel keeps the tip edge level so hair with several strands in one Warp sways side by side. Changing a swing recomputes its forms; delete with bake=true to keep them as ordinary keys. Verify with view poses at the parameter endpoints.",
         mapOf("put" to "swing_put", "delete" to "swing_delete"), true)
