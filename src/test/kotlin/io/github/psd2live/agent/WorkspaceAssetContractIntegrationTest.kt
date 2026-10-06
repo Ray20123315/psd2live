@@ -9,6 +9,7 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.io.TempDir
 import java.awt.image.BufferedImage
 import java.nio.file.Path
+import java.util.Base64
 import javax.imageio.ImageIO
 import kotlin.test.*
 
@@ -83,9 +84,20 @@ class WorkspaceAssetContractIntegrationTest {
                     })
                     val reference = referenceResult.data.getValue("id")
                     assertEquals(2, referenceResult.images.size)
+                    val importDefinition = operations.registry.definition("asset_import_png")
+                    val importProperties = importDefinition.requestSchema.getValue("properties").jsonObject
+                    assertTrue("png_path" in importProperties)
+                    assertTrue("png_base64" in importProperties)
+                    assertFalse(importDefinition.requestSchema.getValue("required").jsonArray.any { it.jsonPrimitive.content == "png_path" })
+
                     val imported = call("asset_import_png", buildJsonObject {
                         put("png_path", generatedPath.toString()); put("reference_id", reference); put("require_transparency", true)
                     }).data
+                    val encoded = Base64.getEncoder().encodeToString(generatedPath.toFile().readBytes())
+                    val importedInline = call("asset_import_png", buildJsonObject {
+                        put("png_base64", "data:image/png;base64,$encoded"); put("reference_id", reference); put("require_transparency", true)
+                    }).data
+                    assertEquals(imported.getValue("assetId"), importedInline.getValue("assetId"))
                     val assetId = imported.getValue("assetId")
                     val registration = call("asset_register", buildJsonObject { put("asset_id", assetId); put("mode", "frame") })
                         .data
